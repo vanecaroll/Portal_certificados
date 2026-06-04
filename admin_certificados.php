@@ -11,7 +11,7 @@ SELECT
 FROM atividades
 INNER JOIN usuarios
 ON atividades.usuario_id = usuarios.id
-ORDER BY curso, turma
+ORDER BY turma, nome
 ";
 
 $stmt = $pdo->query($sql);
@@ -52,33 +52,51 @@ $atividades = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <tbody>
 
+                <?php $turmaAtual = ''; ?>
+
                 <?php foreach($atividades as $atividade): ?>
 
-                <tr>
+                    <?php if($turmaAtual != $atividade['turma']): ?>
 
-                    <td><?= $atividade['nome'] ?></td>
+                        <?php $turmaAtual = $atividade['turma']; ?>
 
-                    <td><?= $atividade['curso'] ?></td>
+                        <tr class="table-primary">
+                            <td colspan="7">
+                                <strong>
+                                    <?= str_replace('_', ' ', $turmaAtual) ?>
+                                </strong>
+                            </td>
+                        </tr>
 
-                    <td><?= $atividade['turma'] ?></td>
+                    <?php endif; ?>
 
-                    <td><?= $atividade['titulo'] ?></td>
+                    <tr>
 
-                    <td><?= $atividade['descricao'] ?></td>
+                        <td><?= htmlspecialchars($atividade['nome']) ?></td>
 
-                    <td>
-                        <a href="<?= $atividade['link_atividade'] ?>" target="_blank">
-                            Abrir
-                        </a>
-                    </td>
+                        <td><?= htmlspecialchars($atividade['curso']) ?></td>
 
-                    <td>
-                        <a href="uploads/<?= $atividade['arquivo'] ?>" target="_blank">
-                            Ver Arquivo
-                        </a>
-                    </td>
+                        <td><?= htmlspecialchars($atividade['turma']) ?></td>
 
-                </tr>
+                        <td><?= htmlspecialchars($atividade['titulo']) ?></td>
+
+                        <td><?= htmlspecialchars($atividade['descricao']) ?></td>
+
+                        <td>
+                            <?php if(!empty($atividade['link_atividade'])): ?>
+                                <a href="<?= $atividade['link_atividade'] ?>" target="_blank">
+                                    Abrir
+                                </a>
+                            <?php endif; ?>
+                        </td>
+
+                        <td>
+                            <a href="<?= $atividade['arquivo'] ?>" target="_blank">
+                                Ver Arquivo
+                            </a>
+                        </td>
+
+                    </tr>
 
                 <?php endforeach; ?>
 

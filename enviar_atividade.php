@@ -23,6 +23,8 @@ if(!isset($_SESSION['usuario_id'])){
 
         <h2 class="mb-4">Enviar Atividade</h2>
 
+</h1>
+
         <form action="upload.php" method="POST" enctype="multipart/form-data">
 
     <div class="mb-3">
@@ -37,17 +39,15 @@ if(!isset($_SESSION['usuario_id'])){
         >
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Turma</label>
+<div class="mb-3">
+    <label class="form-label">Turma</label>
 
-        <input
-            type="text"
-            name="turma"
-            class="form-control"
-            placeholder="Digite sua turma"
-            required
-        >
-    </div>
+    <select name="turma" class="form-select" required>
+        <option value="">Selecione</option>
+        <option value="Turma_A">Turma A</option>
+        <option value="Turma_B">Turma B</option>
+    </select>
+</div>
 
     <div class="mb-3">
         <label class="form-label">Título</label>

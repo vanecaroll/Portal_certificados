@@ -108,7 +108,7 @@ $atividades = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </p>
 
                 <a
-                    href="uploads/<?= $atividade['arquivo']; ?>"
+                    href="/Portal_certificados/<?= $atividade['arquivo']; ?>"
                     target="_blank"
                     class="btn btn-primary"
                 >

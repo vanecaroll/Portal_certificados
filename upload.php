@@ -18,13 +18,39 @@ $nomeArquivo = time() . "_" . $arquivo['name'];
 
 $tmp = $arquivo['tmp_name'];
 
-$pasta = "uploads/";
+/*
+|--------------------------------------------------------------------------
+| CRIA A PASTA DA TURMA SE NÃO EXISTIR
+|--------------------------------------------------------------------------
+*/
+
+$pasta = "uploads/" . $turma . "/";
 
 if(!is_dir($pasta)){
     mkdir($pasta, 0777, true);
 }
 
-move_uploaded_file($tmp, $pasta . $nomeArquivo);
+/*
+|--------------------------------------------------------------------------
+| CAMINHO COMPLETO DO ARQUIVO
+|--------------------------------------------------------------------------
+*/
+
+$destino = $pasta . $nomeArquivo;
+
+/*
+|--------------------------------------------------------------------------
+| MOVE O ARQUIVO
+|--------------------------------------------------------------------------
+*/
+
+move_uploaded_file($tmp, $destino);
+
+/*
+|--------------------------------------------------------------------------
+| SALVA NO BANCO
+|--------------------------------------------------------------------------
+*/
 
 $sql = "INSERT INTO atividades
 (usuario_id, titulo, descricao, link_atividade, arquivo, curso, turma)
@@ -38,7 +64,7 @@ $stmt->execute([
     ':titulo' => $titulo,
     ':descricao' => $descricao,
     ':link' => $link,
-    ':arquivo' => $nomeArquivo,
+    ':arquivo' => $destino,
     ':curso' => $curso,
     ':turma' => $turma
 ]);

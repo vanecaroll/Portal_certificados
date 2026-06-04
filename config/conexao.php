@@ -4,7 +4,7 @@ $host = "127.0.0.1";
 $db = "sistema_arquivos";
 $user = "root";
 $pass = "";
-$porta = "3307";
+$porta = "3306";
 
 try {
     $pdo = new PDO(
