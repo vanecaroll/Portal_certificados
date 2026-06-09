@@ -1,12 +1,17 @@
 <?php
+// 1. CORREÇÃO: Inicia a sessão para conseguir identificar o usuário logado
+session_start();
 
 require_once 'config/conexao.php';
 
+// Verifica se usuário está logado
 if(!isset($_SESSION['usuario_id'])){
-
     header("Location: login.php");
     exit;
 }
+
+// Pega os dados do usuário logado na sessão
+$usuario_id = $_SESSION['usuario_id'];
 
 $mensagem = '';
 $tipo_mensagem = '';
@@ -46,11 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Se não houver erros até aqui, salva no banco de dados
     if ($tipo_mensagem !== 'danger') {
         try {
-            $sql = "INSERT INTO atividades (aluno_nome, descricao, link_externo, arquivo_path) 
-                    VALUES (:aluno_nome, :descricao, :link_externo, :arquivo_path)";
+            // 2. CORREÇÃO: Incluído o campo 'usuario_id' no INSERT para vincular a atividade ao aluno logado
+            $sql = "INSERT INTO atividades (usuario_id, aluno_nome, descricao, link_externo, arquivo_path) 
+                    VALUES (:usuario_id, :aluno_nome, :descricao, :link_externo, :arquivo_path)";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
+                ':usuario_id'   => $usuario_id, // Gravando o ID da sessão
                 ':aluno_nome'   => $aluno_nome,
                 ':descricao'    => $descricao,
                 ':link_externo' => $link_externo ? $link_externo : null,
@@ -66,8 +73,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Busca as atividades já enviadas para listar na tela
-$atividades = $pdo->query("SELECT * FROM atividades ORDER BY data_envio DESC")->fetchAll();
+// 3. CORREÇÃO CRÍTICA: Agora busca APENAS as atividades que pertencem ao usuário logado
+$sql_lista = "SELECT * FROM atividades WHERE usuario_id = :usuario_id ORDER BY data_envio DESC";
+$stmt_lista = $pdo->prepare($sql_lista);
+$stmt_lista->execute([':usuario_id' => $usuario_id]);
+$atividades = $stmt_lista->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -86,22 +96,15 @@ $atividades = $pdo->query("SELECT * FROM atividades ORDER BY data_envio DESC")->
         <div class="col-md-10">
             
             <div class="d-flex justify-content-between align-items-center mb-4">
-
-    <h2>Portal de Entrega de Atividades</h2>
-
-    <div>
-
-        <span class="me-3">
-            <?= $_SESSION['usuario_nome']; ?>
-        </span>
-
-        <a href="logout.php" class="btn btn-danger btn-sm">
-            Sair
-        </a>
-
-    </div>
-
-</div>
+                <h2>Portal de Entrega de Atividades</h2>
+                <div>
+                    <span class="me-3">
+                        <?= htmlspecialchars($_SESSION['usuario_nome']); ?>
+                    </span>
+                    <a href="dashboard.php" class="btn btn-secondary btn-sm me-2">Voltar</a>
+                    <a href="logout.php" class="btn btn-danger btn-sm">Sair</a>
+                </div>
+            </div>
 
             <!-- Alertas de Feedback -->
             <?php if (!empty($mensagem)): ?>
@@ -117,12 +120,12 @@ $atividades = $pdo->query("SELECT * FROM atividades ORDER BY data_envio DESC")->
                     <h5 class="mb-0">Enviar Nova Atividade</h5>
                 </div>
                 <div class="card-body">
-                    <!-- O enctype é OBRIGATÓRIO para envio de arquivos -->
                     <form action="index.php" method="POST" enctype="multipart/form-data">
                         
                         <div class="mb-3">
                             <label for="aluno_nome" class="form-label">Nome Completo do Aluno</label>
-                            <input type="text" class="form-control" id="aluno_nome" name="aluno_nome" required placeholder="Digite seu nome">
+                            <!-- Pré-preenchido com o nome da sessão para facilitar -->
+                            <input type="text" class="form-control" id="aluno_nome" name="aluno_nome" required value="<?= htmlspecialchars($_SESSION['usuario_nome']); ?>">
                         </div>
 
                         <div class="mb-3">
@@ -152,7 +155,7 @@ $atividades = $pdo->query("SELECT * FROM atividades ORDER BY data_envio DESC")->
             <!-- Tabela de Atividades Entregues -->
             <div class="card shadow-sm">
                 <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">Atividades Registradas</h5>
+                    <h5 class="mb-0">Minhas Atividades Registradas</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -191,7 +194,7 @@ $atividades = $pdo->query("SELECT * FROM atividades ORDER BY data_envio DESC")->
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">Nenhuma atividade entregue ainda.</td>
+                                        <td colspan="4" class="text-center py-4 text-muted">Você ainda não enviou nenhuma atividade.</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
@@ -204,8 +207,6 @@ $atividades = $pdo->query("SELECT * FROM atividades ORDER BY data_envio DESC")->
     </div>
 </div>
 
-<!-- Bootstrap JS Bundle com Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
